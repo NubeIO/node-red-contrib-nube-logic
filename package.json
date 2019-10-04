@@ -1,5 +1,5 @@
 {
-  "name": "node-red-nube-logic",
+  "name": "node-red-contrib-nube-logic",
   "version": "1.0.3",
   "description": "logic blocks",
   "dependencies": {
@@ -7,12 +7,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/NubeIO/node-red-nube-logic.git"
+    "url": "https://github.com/NubeIO/node-red-contrib-nube-logic.git"
   },
   "keywords": [
     "node-red",
-    "hvac",
-    "automation"
   ],
   "author": "Ap",
   "license": "MIT",
