@@ -1,0 +1,342 @@
+<script type="text/x-red" data-template-name="and-gate">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name" />
+    </div>
+    <div class="form-row">
+        <label for="node-input-outputTopic"><i class="fa fa-tasks"></i> Topic</label>
+        <input type="text" id="node-input-outputTopic" placeholder="Topic" />
+    </div>
+    <div class="form-row">
+        <label for="node-input-gateType"><i class="fa fa-cog"></i> Type</label>
+        <select id="node-input-gateType" name="node-input-gateType">
+            <option value="and">AND</option>
+            <option value="nand">NAND</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-emitOnlyIfTrue"><i class="fa fa-times"></i> True restriction</label>
+        <input type="checkbox" id="node-input-emitOnlyIfTrue" />
+    </div>
+
+    <label for="node-input-rule-container"><i class="fa fa-cogs"></i> Add Rules</label>
+    <div class="form-row node-input-rule-container-row">
+        <p>Step 1 - Enter msg topic</p> 
+        <p>Step 2 - Enter your msg payload</p> 
+        <p>Step 3 - Select condition to test aginst</p> 
+        <p>Step 4 - Enter your ondition value</p>
+        <ol id="node-input-rule-container"></ol>
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="and-gate">
+    <p>A node to perform AND and NAND gate, according to predefined rules.</p>
+
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt>topic(mandatory)
+            <span class="property-type">string</span>
+        </dt>
+        <dd> the topic of the message. This is mandatory because of the node configuration </dd>
+        <dt>
+            <any property>
+                <span class="property-type">string | number | object | bool</span>
+        </dt>
+        <dd> the property to test </dd>
+    </dl>
+
+    <h3>Outputs</h3>
+    <ol class="node-ports">
+        <li>Standard output
+            <dl class="message-properties">
+                <dt>topic <span class="property-type">string</span></dt>
+                <dd>the node's defined topic</dd>
+                <dt>payload <span class="property-type">string | object</span></dt>
+                <dd>the payload of the message that trigged the node</dd>
+                <dt>bool <span class="property-type">bool</span></dt>
+                <dd>the result of the node</dd>
+            </dl>
+        </li>
+    </ol>
+
+    <h3>Configuration</h3>
+    <p>You can add a rule by clicking on the add button below the Rule's list.</p>
+
+    <dl class="message-properties">
+        <dt>Name <span class="property-type">string</span></dt>
+        <dd>the name of the node</dd>
+        <dt>Topic <span class="property-type">string</span></dt>
+        <dd>the msg output topic</dd>
+        <dt>Type <span class="property-type">AND | NAND</span></dt>
+        <dd>define the gate of the node</dd>
+        <dt>True restriction <span class="property-type">checkbox</span></dt>
+        <dd>if checked, the node will output message only if the condition is true</dd>
+    </dl>
+
+    <p>A rule can be read from top, like :</p>
+    <p><strong>&lt;TOPIC&gt;&lt;PROPERTY&gt;&lt;CONDITION&gt;&lt;VALUE&gt;</strong></p>
+    <p>Depending on your selection, some input may disapear, because they're not pertinent.</p>
+    <dl class="message-properties">
+        <dt>TOPIC <span class="property-type">string</span></dt>
+        <dd>the topic of the message that come in</dd>
+        <dt>PROPERTY <span class="property-type">properties</span></dt>
+        <dd>the property to check</dd>
+        <dt>CONDITION </dt>
+        <dd>the property condition</dd>
+        <dt>VALUE <span class="property-type">number | string | properties | previousValue</span></dt>
+        <dd>the value that the property need to check</dd>
+    </dl>
+
+    <h3>Details</h3>
+    <p>A message come into the node. The node will evaluate it according to the configuration. Please take your time for it.</p>
+
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('and-gate', {
+        color: "#9DD2B6",
+        category: 'nube functions',
+        defaults: {
+            name: { value: "" },
+            rules: { value: [{ topic: "", property: "payload", propertyType: "msg", t: "eq", v: "" }] },
+            outputTopic: { value: "" },
+            gateType: { value: "and", required: true },
+            emitOnlyIfTrue: { value: false },
+        },
+        paletteLabel: "AND",
+        inputs: 1,
+        inputLabels: "Msg to evaluate / trigger",
+        outputs: 1,
+        outputLabels: "Result of the AND condition",
+        icon: "switch.png",
+        label: function () {
+            return this.name || this.gateType + " gate";
+        },
+        oneditprepare: function () {
+            var node = this;
+            // Adding this type for typed input
+            var previousValueType = { value: "prev", label: "previous value", hasValue: false };
+            var operators = [
+                { v: "eq", t: "==" },
+                { v: "neq", t: "!=" },
+                { v: "lt", t: "<" },
+                { v: "lte", t: "<=" },
+                { v: "gt", t: ">" },
+                { v: "gte", t: ">=" },
+                { v: "btwn", t: "is between" },
+                { v: "cont", t: "contains" },
+                { v: "regex", t: "match regex" },
+                { v: "true", t: "is true" },
+                { v: "false", t: "is false" },
+                { v: "null", t: "is null" },
+                { v: "nnull", t: "is not null" }
+            ];
+
+            var andLabel = "and";
+            var caseLabel = "ignore case";
+
+            function resizeRule(rule) {
+                var newWidth = rule.width();
+                var topicField = rule.find(".node-input-rule-input-topic");
+                topicField.typedInput("width", "95%");
+                var propertyField = rule.find(".node-input-rule-property");
+                var selectField = rule.find("select");
+                propertyField.typedInput("width", Math.trunc(newWidth / 2) - 10);
+                selectField.width(Math.trunc(newWidth / 2) - 25);
+                var type = selectField.val() || "eq";
+                var valueField = rule.find(".node-input-rule-value");
+                var btwnField1 = rule.find(".node-input-rule-btwn-value");
+                var btwnLabel = rule.find(".node-input-rule-btwn-label");
+                var btwnField2 = rule.find(".node-input-rule-btwn-value2");
+                var regexField = rule.find(".node-input-rule-regex");
+                var caseSensitive = rule.find(".node-input-rule-case");
+                var caseLabel = rule.find(".node-input-rule-case-label");
+
+                switch (type) {
+                    case "btwn": {
+                        btwnField1.typedInput("width", Math.trunc(newWidth / 2) - (btwnLabel.width() / 2) - 10)
+                        btwnField2.typedInput("width", Math.trunc(newWidth / 2) - (btwnLabel.width() / 2) - 10)
+                        break;
+                    }
+                    case "regex": {
+                        regexField.typedInput("width", newWidth - caseSensitive.width() - caseLabel.width() - 20)
+                        break;
+                    }
+                    default: {
+                        valueField.typedInput("width", "95%");
+                        break;
+                    }
+                }
+            }
+
+            $("#node-input-rule-container").css('min-height', '250px').css('min-width', '450px').editableList({
+                addItem: function (container, i, opt) {
+                    var rule = opt;
+
+                    // If t isn't defined, set equal as default value
+                    if (!rule.hasOwnProperty('t')) {
+                        rule.t = 'eq';
+                    }
+
+                    //Adding row to the list
+                    var topicRow = $('<div/>').appendTo(container);
+                    var propertyRow = $('<div/>', { style: "padding-top: 5px;" }).appendTo(container);
+                    var valueRow = $('<div/>', { style: "padding-top: 5px;" }).appendTo(container);
+
+                    var topicField = $('<input/>', { class: "node-input-rule-input-topic", type: "text", style: "margin-left: 5px;", placeholder: "input message topic" }).appendTo(topicRow).typedInput({ default: 'str', types: ['str'] });
+                    var propertyField = $('<input/>', { class: "node-input-rule-property", type: "text", style: "margin-left: 5px;" }).appendTo(propertyRow).typedInput({ default: rule.propertyType || 'msg', types: ['msg', 'flow', 'global'] });
+                    var selectField = $('<select/>', { style: "width:120px; margin-left: 5px; text-align: center;" }).appendTo(propertyRow);
+                    for (var d in operators) {
+                        selectField.append($("<option></option>").val(operators[d].v).text(operators[d].t));
+                    }
+
+                    var valueField = $('<input/>', { class: "node-input-rule-value", type: "text", style: "margin-left: 5px;", placeholder: "value" }).appendTo(valueRow).typedInput({ default: 'str', types: ['msg', 'flow', 'global', 'str', 'num', previousValueType] });
+                    var btwnValueField = $('<input/>', { class: "node-input-rule-btwn-value", type: "text", style: "margin-left: 5px;" }).appendTo(valueRow).typedInput({ default: 'num', types: ['msg', 'flow', 'global', 'num', previousValueType] });
+                    var btwnAndLabel = $('<span/>', { class: "node-input-rule-btwn-label" }).text(" " + andLabel + " ").appendTo(valueRow);
+                    var btwnValue2Field = $('<input/>', { class: "node-input-rule-btwn-value2", type: "text", style: "margin-left:2px;" }).appendTo(valueRow).typedInput({ default: 'num', types: ['msg', 'flow', 'global', 'num', previousValueType] });
+                    var regexField = $('<input/>', { class: "node-input-rule-regex", type: "text", style: "margin-left:5px;" }).appendTo(valueRow).typedInput({ default: 're', types: ['re'] });
+                    var caseSensitive = $('<input/>', { class: "node-input-rule-case", type: "checkbox", style: "margin-left:5px;width:auto;" }).appendTo(valueRow);
+                    var formCaseLabel = $('<label/>', { class: "node-input-rule-case-label", for: "node-input-rule-case", style: "margin-left: 3px;" }).text(caseLabel).appendTo(valueRow);
+
+                    selectField.change(function () {
+                        resizeRule(container);
+                        var selected = selectField.val() || "eq";
+                        switch (selected) {
+                            case "btwn": {
+                                valueField.typedInput('hide');
+                                btwnValueField.typedInput('show');
+                                btwnAndLabel.show();
+                                btwnValue2Field.typedInput('show');
+                                regexField.typedInput('hide');
+                                caseSensitive.hide();
+                                formCaseLabel.hide();
+                                break;
+                            }
+                            case "regex": {
+                                valueField.typedInput('hide');
+                                btwnValueField.typedInput('hide');
+                                btwnAndLabel.hide();
+                                btwnValue2Field.typedInput('hide');
+                                regexField.typedInput('show');
+                                caseSensitive.show();
+                                formCaseLabel.show();
+                                break;
+                            }
+                            case "true":
+                            case "false":
+                            case "null":
+                            case "nnull": {
+                                valueField.typedInput('hide');
+                                btwnValueField.typedInput('hide');
+                                btwnAndLabel.hide();
+                                btwnValue2Field.typedInput('hide');
+                                regexField.typedInput('hide');
+                                caseSensitive.hide();
+                                formCaseLabel.hide();
+                                break;
+                            }
+                            default: {
+                                valueField.typedInput('show');
+                                btwnValueField.typedInput('hide');
+                                btwnAndLabel.hide();
+                                btwnValue2Field.typedInput('hide');
+                                regexField.typedInput('hide');
+                                caseSensitive.hide();
+                                formCaseLabel.hide();
+                                break;
+                            }
+                        }
+                    });
+
+                    // Show the messageTopic field or not
+                    propertyField.change(function (type, value) {
+                        resizeRule(container);
+                        if (value === "msg")
+                            topicField.typedInput('show');
+                        else if (value != undefined)
+                            topicField.typedInput('hide');
+                    });
+
+                    //save the selected field
+                    selectField.val(rule.t);
+
+                    //set value as defined
+                    propertyField.typedInput('value', rule.property || 'payload');
+                    propertyField.typedInput('type', rule.propertyType || 'msg');
+                    topicField.typedInput('value', rule.topic);
+                    if (rule.t == "btwn") {
+                        btwnValueField.typedInput('value', rule.v);
+                        btwnValueField.typedInput('type', rule.vt || 'num');
+                        btwnValue2Field.typedInput('value', rule.v2);
+                        btwnValue2Field.typedInput('type', rule.v2t || 'num');
+                    } else if (typeof rule.v != "undefined") {
+                        if (rule.t == "regex") {
+                            regexField.typedInput('value', rule.v)
+                        } else {
+                            valueField.typedInput('value', rule.v);
+                            valueField.typedInput('type', rule.vt || 'str');
+                        }
+                    }
+                    if (rule.case) {
+                        caseSensitive.prop('checked', true);
+                    } else {
+                        caseSensitive.prop('checked', false);
+                    }
+                    selectField.change();
+                },
+                resizeItem: resizeRule,
+                sortable: false,
+                removable: true
+            });
+            for (var i = 0; i < this.rules.length; i++) {
+                var rule = this.rules[i];
+                $("#node-input-rule-container").editableList('addItem', rule);
+            }
+        },
+        oneditsave: function () {
+            var rules = $("#node-input-rule-container").editableList('items');
+            var node = this;
+            node.rules = [];
+            rules.each(function (i) {
+                var rule = $(this);
+                // Get the selected operator
+                var type = rule.find("select").val();
+                // format rule
+                var r = { t: type };
+                if (!(type === "true" || type === "false" || type === "null" || type === "nnull")) {
+                    if (type === "btwn") {
+                        r.v = rule.find(".node-input-rule-btwn-value").typedInput('value');
+                        r.vt = rule.find(".node-input-rule-btwn-value").typedInput('type');
+                        r.v2 = rule.find(".node-input-rule-btwn-value2").typedInput('value');
+                        r.v2t = rule.find(".node-input-rule-btwn-value2").typedInput('type');
+                    } else {
+                        r.v = rule.find(".node-input-rule-value").typedInput('value');
+                        r.vt = rule.find(".node-input-rule-value").typedInput('type');
+                    }
+                    if (type === "regex") {
+                        r.v = rule.find(".node-input-rule-regex").typedInput('value');
+                        r.case = rule.find(".node-input-rule-case").prop("checked");
+                    }
+                }
+                r.propertyType = rule.find(".node-input-rule-property").typedInput('type');
+                r.property = rule.find(".node-input-rule-property").typedInput('value');
+
+                if (r.propertyType === "msg") { // if it's a message, store the message topic
+                    r.topic = rule.find(".node-input-rule-input-topic").typedInput('value');
+                }
+                node.rules.push(r);
+            });
+        },
+        oneditresize: function (size) {
+            var rows = $("#dialog-form>div:not(.node-input-rule-container-row)");
+            var height = size.height;
+            for (var i = 0; i < rows.size(); i++) {
+                height -= $(rows[i]).outerHeight(true);
+            }
+            var editorRow = $("#dialog-form>div.node-input-rule-container-row");
+            height -= (parseInt(editorRow.css("marginTop")) + parseInt(editorRow.css("marginBottom")));
+            $("#node-input-rule-container").editableList('height', height);
+        }
+    });
+
+</script>

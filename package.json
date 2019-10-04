@@ -1,0 +1,31 @@
+{
+  "name": "node-red-nube-logic",
+  "version": "1.0.3",
+  "description": "logic blocks",
+  "dependencies": {
+    "time": "^0.11.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NubeIO/node-red-nube-logic.git"
+  },
+  "keywords": [
+    "node-red",
+    "hvac",
+    "automation"
+  ],
+  "author": "Ap",
+  "license": "MIT",
+  "node-red": {
+    "nodes": {
+      "math": "math.js",
+      "logic": "logic.js",
+      "compare": "compare.js",
+      "hysteresis": "hysteresis.js",
+      "delay-on-off": "delay-on-off.js",
+      "math-func": "math-func.js",
+      "and": "and.js",
+      "or": "or.js"
+    }
+  }
+}

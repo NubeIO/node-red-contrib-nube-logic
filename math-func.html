@@ -1,0 +1,125 @@
+<script type="text/javascript">
+    RED.nodes.registerType('math-func',{
+        category: 'nube functions',
+        color: '#CD95CD',
+        defaults: {
+		    name: {value:""}, 
+			operator : {value:"+"},
+            operand : {value:""},		
+            /*
+			topicI2 : {value:"b"},
+			topicI3 : {value:"c"},	
+			topicI4 : {value:"d"},	
+			valueI1 : {value:""},		
+            valueI2 : {value:""},	
+			valueI3 : {value:""},	
+			valueI4 : {value:""},
+			outDefault : {value:"0"},*/					
+        },
+        inputs:1,
+        outputs:1,
+        align: "right",
+        icon: "function.png",
+		
+        label: 	function() {		
+		    if (this.name == "") return "Math " ;
+			else  return this.name ;
+        },
+        
+    });
+</script>
+
+
+<script type="text/x-red" data-template-name="math-func">
+
+    
+	<div class="form-row">
+        <label for="node-input-operator"><i class="icon-tag"></i>Operator</label>
+        <select id="node-input-operator" style="width:125px !important">
+            <option value="+">x + y</option>
+            <option value="-">x - y</option>
+            <option value="*">x * y</option>
+			<option value="/">x / y</option>
+			<option value="%">x modulo y</option>
+            <option value="^">x ^ y</option>
+            <option value="log">log_x_(y)</option>
+			<option value="round">round x</option>
+			<option value="floor">floor of x</option>
+            <option value="ceil">Ceiling of x</option>
+            <option value="sin">sin(x)</option>
+			<option value="cos">cos(x)</option>
+			<option value="tan">tan(x)</option>
+			<option value="csc">csc(x)</option>
+			<option value="sec">sec(x)</option>
+			<option value="cot">cot(x)</option>			
+            <option value="-r">y - x</option>           
+			<option value="/r">y / x</option>
+			<option value="%r">y modulo x</option>
+            <option value="^r">y ^ x</option>
+			<option value="logr">log_y_(x)</option>
+			<option value="roundr">round y</option>
+			<option value="floorr">floor of y</option>
+            <option value="ceilr">Ceiling of y</option>
+            <option value="sinr">sin(y)</option>
+			<option value="cosr">cos(y)</option>
+			<option value="tanr">tan(y)</option>
+			<option value="cscr">csc(y)</option>
+			<option value="secr">sec(y)</option>
+			<option value="cotr">cot(y)</option>	
+        </select>
+    </div>
+	
+	<div class="form-row" id="node-input-payload">
+        <label for="node-input-payload"><i class="icon-tag"></i>x =</label>
+        <label>msg.payload</label>
+    </div>
+
+	<div class="form-row">
+        <label for="node-input-operand"><i class="icon-tag"></i>y =</label>
+        <input type="text" id="node-input-operand" placeholder="Enter a number,pi or e">
+    </div>
+	
+	 <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+	<!--
+	<div class="form-row" id="node-input-topicI3-div">
+        <label for="node-input-topicI3"><i class="icon-tag"></i>Input 3 topic</label>
+        <input type="text" id="node-input-topicI3" placeholder="Input 3 topic">
+    </div>
+
+	<div class="form-row" id="node-input-topicI4-div">
+        <label for="node-input-topicI4"><i class="icon-tag"></i>Input 4 topic</label>
+        <input type="text" id="node-input-topicI4" placeholder="Input 4 topic">
+    </div>
+	
+		<div class="form-row" id="node-input-valueI1-div">
+        <label for="node-input-valueI1"><i class="icon-tag"></i>Input 1 value</label>
+        <input type="text" id="node-input-valueI1" placeholder="Input 1 value">
+    </div>
+
+	<div class="form-row" id="node-input-valueI2-div">
+        <label for="node-input-valueI2"><i class="icon-tag"></i>Input 2 value</label>
+        <input type="text" id="node-input-valueI2" placeholder="Input 2 value">
+    </div>
+	
+	<div class="form-row" id="node-input-valueI3-div">
+        <label for="node-input-valueI3"><i class="icon-tag"></i>Input 3 value</label>
+        <input type="text" id="node-input-valueI3" placeholder="Input 3 value">
+    </div>
+
+	<div class="form-row" id="node-input-valueI4-div">
+        <label for="node-input-valueI4"><i class="icon-tag"></i>Input 4 value</label>
+        <input type="text" id="node-input-valueI4" placeholder="Input 4 value">
+    </div>
+	
+	<div class="form-row">
+        <label for="node-input-outDefault"><i class="icon-tag"></i> Default Value</label>
+        <input type="text" id="node-input-outDefault" placeholder="Output Default">
+    </div>-->  
+</script>
+
+<script type="text/x-red" data-help-name="math-func">
+    <p>Math Functions Node</p>
+</script>
