@@ -26,6 +26,7 @@
       "and": "and.js",
       "or": "or.js",
       "bool-count": "bool-count.js",
+      "unit-converter": "unit-converter.js",
       "pid": "pid.js"
    
     }
