@@ -1,43 +1,44 @@
 <script type="text/javascript">
-    RED.nodes.registerType('delay-on-off',{
-        category: 'nube boolean',
-        color: '#9DD2B6',
-		defaults: {
-            name: {value:""},
-			delayon: {value:"0"},
-			delayoff: {value:"0"}	
-			
+
+    RED.nodes.registerType('DelayOnOff', {
+        category: 'NubeIO',
+        color: '#3FADB5',
+        defaults: {
+            name: {value: ""},
+            onDelay: {value: "0"},
+            offDelay: {value: "0"}
         },
-        inputs:1,
-        outputs:1,
-        align: "right",
-        icon: "timer.png",
+        icon: "nube-io.png",
         label: function() {
-			if (this.name == "") return "delay-on-off";
-			else                 return "delay-on-off"+"->"+this.name;
-        }		
+			if (this.name == "") return "Delay";
+			else                 return "Delay"+" "+"->"+" "+this.name;
+        },		
+        inputs: 1,
+        outputs: 1,
+        labelStyle: function() {
+            return this.name ? "node_label_italic" : "";
+        },
     });
 </script>
 
-<script type="text/x-red" data-template-name="delay-on-off">
+
+<script type="text/x-red" data-template-name="DelayOnOff">
     <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
-	
-	<div class="form-row">
-        <label for="node-input-delayon"><i class="icon-tag"></i> Delay On</label>
-        <input type="number" step="any" id="node-input-delayon" placeholder="Value">
+
+    <div class="form-row">
+        <label for="node-input-onDelayTime"><i class="icon-tag"></i> ON Delay</label>
+        <input type="number" id="node-input-onDelay" placeholder="ON Delay">
     </div>
 
-	<div class="form-row">
-        <label for="node-input-delayoff"><i class="icon-tag"></i> Delay Off</label>
-        <input type="number" step="any" id="node-input-delayoff" placeholder="Value">
+    <div class="form-row">
+        <label for="node-input-offDelay"><i class="icon-tag"></i> OFF Delay</label>
+        <input type="number" id="node-input-offDelay" placeholder="OFF Delay">
     </div>
-	
-	
 </script>
 
-<script type="text/x-red" data-help-name="delay-on-off">
-    <p>Delay On/Off Node!</p>
+<script type="text/x-red" data-help-name="DelayOnOff">
+    <p>Turn on/off a topic</p>
 </script>

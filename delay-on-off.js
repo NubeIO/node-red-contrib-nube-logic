@@ -1,70 +1,93 @@
-module.exports = function(RED) {
+module.exports = function (RED) {
 
-	var time = require('time');
-    
-    function delayonoffNode(config) {
-        RED.nodes.createNode(this,config);
-        
+	function DelayOnOff(config) {
+		RED.nodes.createNode(this, config);
+
+		let node = this;
 		this.prefix = config.prefix;
-		this.delayon = config.delayon;
-		this.delayoff = config.delayoff;
-		this.interval_id = null;
-		
-		var node = this;
-		
-		var value = 0;
-		var sendflag = 0;
-		var lastinput = -1;
-		var output_time = time.time();
-				
-		// Set interval
-		this.interval_id = setInterval(function()
-						   {
-						        if ((time.time() > output_time) && (sendflag == 1))
-								{
-								  sendflag = 0;
-								  var msg = {topic:node.name, payload:Number(value)}; //updated App to send name as topic
-								  node.status({fill:"green",shape:"dot",text: value.toString()});
-								  node.send(msg);
-						
-								  
-								}  
-							},1000);
-		
-		this.on('input', function(msg) 
-						{
-							// setup write flag 
-							value = parseInt(msg.payload);
-							
-							// if last input is -1 send to output without delay
-							if (lastinput == -1)
-							{
-								lastinput = value;
-								sendflag = 1;
-							} else
-							if ((lastinput == 0) && (value == 1))
-							{
-								output_time = time.time() + parseInt(node.delayon);
-								lastinput = value;
-								sendflag = 1;
-							} else
-							if ((lastinput == 1) && (value == 0))
-							{
-								output_time = time.time() + parseInt(node.delayoff);
-								lastinput = value;
-								sendflag = 1;
-							}
-						});
-	
+		this.name = config.name;
+		const context = this.context();
+
+		let onDelaySetting = this.onDelay = config.onDelay;
+		let offDelaySetting = this.offDelay = config.offDelay;
+		let onDelay = parseInt(onDelaySetting)*1000;
+		let offDelay = parseInt(offDelaySetting)*1000;
+
+		let timeoutFunc = context.get('timeoutFunc') || null;
+		let turningOn = context.get('turningOn') || 0;
+		let turningOff = context.get('turningOff') || 1;
+		let isOn = context.get('isOn') || 0;
+
+		this.on('input', function (msg) {
+
+			if (msg.payload === 1) {
+				if (turningOff) { /* Was turning off but was switched back on before the off delay elapsed */
+					clearTimeout(timeoutFunc);
+					turningOff = 0;
+					isOn = 1;
+					context.set('turningOff', turningOff);
+					context.set('isOn', isOn);
+					node.status({fill:"red", shape:"dot", text:msg.payload});
+					node.send(msg);
+				} else if (!turningOn && !isOn) {  /* Not turning on and not on, so start turning on */
+					turningOn = Date.now();
+					context.set('turningOn', turningOn);
+					node.status({fill:"yellow", shape:"dot", text:"Turning True"});
+					timeoutFunc = setTimeout(function(){
+						isOn = 1;
+						turningOn = 0;
+						context.set('isOn', isOn);
+						context.set('turningOn', turningOn);
+						node.status({fill:"red", shape:"dot", text:msg.payload});
+						node.send(msg);
+					}, onDelay);
+					context.set('timeoutFunc', timeoutFunc);
+				} else if (turningOn && !isOn) { /* Is turning on but isn't on yet */
+					const timeRemaining = (onDelay - (Date.now() - turningOn)) / 1000;
+					node.status({fill:"yellow", shape:"dot", text: "True In " + timeRemaining + " seconds"});
+					msg.payload = 0;
+					node.send(msg);
+			   } else { /* Is already on */
+				   msg.payload = 1;
+				   node.send(msg);
+			   }
+			} else if (msg.payload === 0) {
+				if (turningOn) { /* Was turning on but was switched back off before the on delay elapsed */
+					clearTimeout(timeoutFunc);
+					turningOn = 0;
+					isOn = 0;
+					context.set('turningOn', turningOn);
+					context.set('isOn', isOn);
+					node.status({fill:"green", shape:"dot", text:msg.payload});
+					node.send(msg);
+				} else if (!turningOff && isOn) {  /* Not turning off and is on, so start turning off */
+					turningOff = Date.now();
+					context.set('turningOff', turningOff);
+					node.status({fill:"yellow", shape:"dot", text:"Turning False"});
+					timeoutFunc = setTimeout(function(){
+						isOn = 0;
+						turningOff = 0;
+						context.set('isOn', isOn);
+						context.set('turningOff', turningOff);
+						node.status({fill:"green", shape:"dot", text:msg.payload});
+						node.send(msg);
+					}, offDelay);
+					context.set('timeoutFunc', timeoutFunc);
+				} else if (turningOff && isOn) { /* Is turning off but isn't off yet */
+					const timeRemaining = (offDelay - (Date.now() - turningOff)) / 1000;
+					node.status({fill:"yellow", shape:"dot", text: "False In " + timeRemaining + " seconds"});
+					msg.payload = 0;
+					node.send(msg);
+			   } else { /* Is already on */
+				   msg.payload = 0;
+				   node.send(msg);
+			   }
+			}
+
+		});
+
 	}
-    
-    RED.nodes.registerType("delay-on-off",delayonoffNode);
-	
-	delayonoffNode.prototype.close = function(){
-		if (this.interval_id != null) 
-		{
-			clearInterval(this.interval_id);
-		}
-	}
-	
+
+	RED.nodes.registerType("DelayOnOff", DelayOnOff);
+
 }

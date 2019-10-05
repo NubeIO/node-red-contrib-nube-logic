@@ -3,7 +3,8 @@
   "version": "1.0.4",
   "description": "logic blocks",
   "dependencies": {
-    "time": "^0.11.4"
+    "time": "^0.11.4",
+    "pid-controller": "^1.0.5" 
   },
   "repository": {
     "type": "git",
@@ -24,8 +25,8 @@
       "math-func": "math-func.js",
       "and": "and.js",
       "or": "or.js",
-      "time-delay": "time-delay.js",
-      "bool-count": "bool-count.js"
+      "bool-count": "bool-count.js",
+      "pid": "pid.js"
    
     }
   }
